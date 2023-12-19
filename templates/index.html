@@ -31,8 +31,8 @@
 					<h1 class="mb-2">
 						Lowongan Pekerjaan di Kalibrr 
 					</h1>
-					<h3>
-						Reported Period: 18 Desember 2023
+					<h3 id = "reportedPeriod">
+						Reported Period: 
 					</h3>
 					<br>
 				</div>
@@ -57,9 +57,13 @@
 		<div class="row">
 			<div class="col-md-12 col-lg-12 col-sm-12">
 				<div class="tab">
-					<button class="tablinks" onclick="openTab(event, 'profile') " id="defaultOpen">by Location
+					<button class="tablinks" onclick="openTab(event, 'profile') " id="defaultOpen">Menurut Lokasi
 					</button>
-					<button class="tablinks" onclick="openTab(event, 'Own')"> by Entry Level
+					<button class="tablinks" onclick="openTab(event, 'Own')"> Menurut Jabatan
+					</button>
+					<button class="tablinks" onclick="openTab(event, 'Company')"> Top 10 Perusahaan
+					</button>
+					<button class="tablinks" onclick="openTab(event, 'Deadline')"> Deadline Lowongan Kurang dari 1 Bulan Lagi
 					</button>
 				</div>
 			</div>
@@ -84,10 +88,64 @@
 					  {% if funded_plot != None %}
 					<img src="data:image/png;base64,{{ plot_result2 }}" style="max-width: 100%;">
 					  {% endif %}
+					</div>
+				</div>
+				<div id="Company" class="tabcontent">
+					<!-- Define your own analysis for extra challange -->
+					<br>
+					<h3 style="color: #333333;text-align:center">Top 10 Perusahaan dengan Penawaran Terbanyak</h3>
+					<div class="img-container">
+						{% if funded_plot != None %}
+					  <img src="data:image/png;base64,{{ plot_result3 }}" style="max-width: 100%;">
+						{% endif %}
+				 	</div>
+				</div>
+				<div id="Deadline" class="tabcontent">
+					<!-- Define your own analysis for extra challange -->
+					<br>
+					<h3 style="color: #333333;text-align:center">Deadline 1 Bulan Lagi</h3>
+					<table class="table">
+						<thead>
+							<tr>
+								<th style="color: #333333;text-align:center;">Lowongan</th>
+								<th style="color: #333333;text-align:center;">Perusahaan</th>
+								<th style="color: #333333;text-align:center;">Lokasi</th>
+								<th style="color: #333333;text-align:center;">Jabatan</th>
+								<th style="color: #333333;text-align:center;">Kontrak Kerja</th>
+								<th style="color: #333333;text-align:center;">Sisa Hari Pendaftaran</th>
+								<!-- Add more headers as needed -->
+							</tr>
+						</thead>
+						<tbody>
+							{% for item in deadline_table %}
+								<tr>
+									<td style="color: #333333;">{{ item['title'] }}</td>
+									<td style="color: #333333;">{{ item['company'] }}</td>
+									<td style="color: #333333;">{{ item['location'] }}</td>
+									<td style="color: #333333;">{{ item['entry_level'] }}</td>
+									<td style="color: #333333;">{{ item['employment'] }}</td>
+									<td style="color: #333333;">{{ item['deadline_day'] }}</td>
+									<!-- Add more columns as needed -->
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
 				</div>
 			</div>
 		</div>
 	</div>
+
+	<script>
+		// JavaScript code to get and format the current date
+		window.onload = function() {
+			var currentDate = new Date();
+			var options = { year: 'numeric', month: 'long', day: 'numeric' };
+			var formattedDate = currentDate.toLocaleDateString('en-US', options);
+	
+			// Set the formatted date to the "Reported Period" element
+			document.getElementById('reportedPeriod').innerHTML = 'Reported Period: ' + formattedDate;
+		};
+	</script>	
 </body>
 
 <script type="text/javascript">

@@ -121,7 +121,8 @@ df_clean = df_clean.reset_index()
 # move from def index2(): filter and pivot the dataframe
 df_pivot = df_clean[df_clean['location'].isin(['Tangerang, Indonesia', 'Phillippines', 'Jakarta, Indonesia'])].pivot_table(columns='location', index='entry_level', values='title', aggfunc='count').fillna(0)
 df_clean['location'] = df_clean['location'].str.replace(', Indonesia','')
-
+df_clean['deadline_day'] = df_clean['deadline_day']// pd.Timedelta('24h')
+df_clean['deadline_day'] = df_clean['deadline_day'].astype('int64')
 
 #end of data wranggling 
 
@@ -134,6 +135,7 @@ def index():
     plt.subplots(figsize=(18,6))
     pd.crosstab(index=df_clean['location'], columns='Total').sort_values(by='Total').plot(kind='barh', ylabel='Lokasi', xlabel='Jumlah Lowongan', legend=False)
     figfile = BytesIO()
+    plt.tight_layout()
     plt.savefig(figfile, format='png', transparent=True, dpi=100)
     plt.close()
 
@@ -147,8 +149,9 @@ def index():
     
     # generate second plot
     plt.subplots(figsize=(18,6))
-    df_pivot.plot(kind='barh', ylabel='Posisi Masuk', xlabel='Jumlah Lowongan')
+    df_pivot.plot(kind='barh', ylabel='Jabatan', xlabel='Jumlah Lowongan')
     figfile2 = BytesIO()
+    plt.tight_layout()
     plt.savefig(figfile2, format='png', transparent=True,dpi=100)
     plt.close()
 
@@ -159,32 +162,33 @@ def index():
     plot_result2 = figdata_png2
     #plt.close(plot_result2)  # Close the figure to free memory
 
+    # generate third plot
+    plt.subplots(figsize=(18,6))
+    pd.crosstab(index=df_clean['company'],columns='Total',colnames=' ').sort_values(by='Total').tail(10).plot(kind='barh', ylabel='Perusahaan',xlabel = 'Jumlah Lowongan', legend=False)
+    figfile3 = BytesIO()
+    plt.tight_layout()
+    plt.savefig(figfile3, format='png', transparent=True,dpi=100)
+    plt.close()
+
+    #set max width
+    max_width = 800
+    figfile3.seek(0)
+    figdata_png3 = base64.b64encode(figfile3.getvalue()).decode('utf-8')
+    plot_result3 = figdata_png3
+
+    #show table 
+    
+    deadline_table = df_clean[df_clean['deadline_day'] <= 60 ].sort_values(by = 'deadline_day')
+
+    deadline_table_list = deadline_table.to_dict(orient='records')
+
     # render to template
     return render_template('index.html',
                            card_data=card_data, 
                            plot_result=plot_result,
-                           plot_result2=plot_result2)
-
-'''
-@app.route("/entry_level")
-def index2():
-    # filter and pivot the dataframe
-    df_pivot = df_clean[df_clean['location'].isin(['Tangerang, Indonesia', 'Phillippines', 'Jakarta, Indonesia'])].pivot_table(columns='location', index='entry_level', values='title', aggfunc='count').fillna(0)
-
-    # plot the data
-    bx = df_pivot.plot(kind='barh', ylabel='Posisi Masuk', xlabel='Jumlah Lowongan',figsize=(14,9))
-    
-    # save the plot to a BytesIO object
-    figfile2 = BytesIO()
-    plt.savefig(figfile2, format='png', transparent=True)
-    figfile2.seek(0)
-    
-    # encode the image to base64
-    figdata_png2 = base64.b64encode(figfile2.getvalue())
-    plot_result2 = str(figdata_png2)[2:-1]
-
-    return render_template('index.html', plot_result2=plot_result2)
-'''
+                           plot_result2=plot_result2,
+                           plot_result3=plot_result3,
+                           deadline_table = deadline_table_list)
 
 
 if __name__ == "__main__": 
