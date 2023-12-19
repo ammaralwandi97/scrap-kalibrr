@@ -118,36 +118,61 @@ df_clean = pd.concat([df_tangerang,df_nontangerang])
 df_clean = df_clean.sort_values(by='deadline_day').loc[:, ['title', 'company', 'location', 'post_date', 'entry_level', 'employment', 'deadline_day', 'formatted_date']]
 df_clean = df_clean.reset_index()
 
+# move from def index2(): filter and pivot the dataframe
+df_pivot = df_clean[df_clean['location'].isin(['Tangerang, Indonesia', 'Phillippines', 'Jakarta, Indonesia'])].pivot_table(columns='location', index='entry_level', values='title', aggfunc='count').fillna(0)
+df_clean['location'] = df_clean['location'].str.replace(', Indonesia','')
+
+
 #end of data wranggling 
 
 @app.route("/")
 def index(): 
 	
-	card_data = f'{pd.crosstab(index=df_clean["location"],columns="Total",colnames=" ")["Total"].sum()}' #be careful with the " and ' 
+    card_data = f'{pd.crosstab(index=df_clean["location"], columns="Total")["Total"].sum()}'
+   
+    # generate first plot
+    plt.subplots(figsize=(18,6))
+    pd.crosstab(index=df_clean['location'], columns='Total').sort_values(by='Total').plot(kind='barh', ylabel='Lokasi', xlabel='Jumlah Lowongan', legend=False)
+    figfile = BytesIO()
+    plt.savefig(figfile, format='png', transparent=True, dpi=100)
+    plt.close()
 
-	# generate plot
-	ax = pd.crosstab(index=df_clean['location'],columns='Total',colnames=' ').sort_values(by='Total').plot(kind='barh', ylabel='Lokasi',xlabel = 'Jumlah Lowongan',legend=False, figsize = (14,9))
-	# Rendering plot
-	# Do not change this
-	figfile = BytesIO()
-	plt.savefig(figfile, format='png', transparent=True)
-	figfile.seek(0)
-	figdata_png = base64.b64encode(figfile.getvalue())
-	plot_result = str(figdata_png)[2:-1]
+    #set max width
+    max_width = 800
+    figfile.seek(0)
+    figdata_png = base64.b64encode(figfile.getvalue()).decode('utf-8')
+    plot_result = figdata_png
+    #plt.close(plot_result)  # Close the figure to free memory
+    
+    
+    # generate second plot
+    plt.subplots(figsize=(18,6))
+    df_pivot.plot(kind='barh', ylabel='Posisi Masuk', xlabel='Jumlah Lowongan')
+    figfile2 = BytesIO()
+    plt.savefig(figfile2, format='png', transparent=True,dpi=100)
+    plt.close()
 
-	# render to html
-	return render_template('index.html',
-		card_data = card_data, 
-		plot_result=plot_result
-		)
+    #set max width
+    max_width = 800
+    figfile2.seek(0)
+    figdata_png2 = base64.b64encode(figfile2.getvalue()).decode('utf-8')
+    plot_result2 = figdata_png2
+    #plt.close(plot_result2)  # Close the figure to free memory
 
+    # render to template
+    return render_template('index.html',
+                           card_data=card_data, 
+                           plot_result=plot_result,
+                           plot_result2=plot_result2)
+
+'''
 @app.route("/entry_level")
 def index2():
     # filter and pivot the dataframe
     df_pivot = df_clean[df_clean['location'].isin(['Tangerang, Indonesia', 'Phillippines', 'Jakarta, Indonesia'])].pivot_table(columns='location', index='entry_level', values='title', aggfunc='count').fillna(0)
 
     # plot the data
-    bx = df_pivot.plot(kind='barh', ylabel='Posisi Masuk', xlabel='Jumlah Lowongan',figsze=(14,9))
+    bx = df_pivot.plot(kind='barh', ylabel='Posisi Masuk', xlabel='Jumlah Lowongan',figsize=(14,9))
     
     # save the plot to a BytesIO object
     figfile2 = BytesIO()
@@ -159,6 +184,7 @@ def index2():
     plot_result2 = str(figdata_png2)[2:-1]
 
     return render_template('index.html', plot_result2=plot_result2)
+'''
 
 
 if __name__ == "__main__": 
